@@ -595,7 +595,7 @@ public class QQSearchEntity {
                       "song_num": %s,
                       "userinfo": 1,
                       "orderlist": 1,
-                      "onlysonglist": 1
+                      "onlysonglist": 0
                     }
                   }
                 }

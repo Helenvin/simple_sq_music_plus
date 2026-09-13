@@ -103,40 +103,12 @@ jobs:
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "APP_VERSION=$VERSION" >> $GITHUB_ENV
 
-      - name: Login to Aliyun Container Registry
-        uses: docker/login-action@v3
-        with:
-          registry: registry.cn-hangzhou.aliyuncs.com
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
-
       - name: Login to GitHub Packages
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Build and Push Docker Image to Aliyun
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          file: Dockerfile
-          platforms: ${{ matrix.platform }}
-          push: true
-          tags: |
-            registry.cn-hangzhou.aliyuncs.com/sqdockler/simple_sq_music_plus:v${{ env.APP_VERSION }}-${{ matrix.tag_suffix }}
-            registry.cn-hangzhou.aliyuncs.com/sqdockler/simple_sq_music_plus:latest-${{ matrix.tag_suffix }}
-          build-args: |
-            JAR_FILE=target/simple_sq_music_plus.jar
-          labels: |
-            org.opencontainers.image.title=Simple Music Server
-            org.opencontainers.image.description=Music streaming server with multi-arch support
-            org.opencontainers.image.version=v${{ env.APP_VERSION }}
-            org.opencontainers.image.architecture=${{ matrix.platform }}
-          provenance: false
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
 
       - name: Build and Push Docker Image to GitHub Packages
         uses: docker/build-push-action@v5
@@ -178,13 +150,6 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Login to Aliyun Container Registry
-        uses: docker/login-action@v3
-        with:
-          registry: registry.cn-hangzhou.aliyuncs.com
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
-
       - name: Login to GitHub Packages
         uses: docker/login-action@v3
         with:
@@ -196,30 +161,6 @@ jobs:
       # 不下载任何镜像层 blob（替代原来的 docker pull + manifest create 老三样）
       # 一次 create 只能用一组源镜像，因此版本 tag 和 latest tag 分两条命令，
       # 版本 manifest 由 v版本-arch 合成，latest manifest 由 latest-arch 合成
-      - name: Create and Push Manifest List for Aliyun
-        run: |
-          # 版本 tag：由 v版本-arch 两个源合成
-          docker buildx imagetools create \
-            -t registry.cn-hangzhou.aliyuncs.com/sqdockler/simple_sq_music_plus:v${{ env.APP_VERSION }} \
-            registry.cn-hangzhou.aliyuncs.com/sqdockler/simple_sq_music_plus:v${{ env.APP_VERSION }}-amd64 \
-            registry.cn-hangzhou.aliyuncs.com/sqdockler/simple_sq_music_plus:v${{ env.APP_VERSION }}-arm64
-
-          # latest tag：由 latest-arch 两个源合成
-          docker buildx imagetools create \
-            -t registry.cn-hangzhou.aliyuncs.com/sqdockler/simple_sq_music_plus:latest \
-            registry.cn-hangzhou.aliyuncs.com/sqdockler/simple_sq_music_plus:latest-amd64 \
-            registry.cn-hangzhou.aliyuncs.com/sqdockler/simple_sq_music_plus:latest-arm64
-
-      - name: Verify Aliyun Manifest List
-        run: |
-          echo "=== v${{ env.APP_VERSION }} ==="
-          docker buildx imagetools inspect \
-            registry.cn-hangzhou.aliyuncs.com/sqdockler/simple_sq_music_plus:v${{ env.APP_VERSION }}
-
-          echo "=== latest ==="
-          docker buildx imagetools inspect \
-            registry.cn-hangzhou.aliyuncs.com/sqdockler/simple_sq_music_plus:latest
-
       - name: Create and Push Manifest List for GitHub Packages
         run: |
           # 版本 tag：由 v版本-arch 两个源合成
@@ -286,14 +227,6 @@ jobs:
             echo "This release includes Docker images for multiple architectures:"
             echo ""
             echo "### Docker Images Available:"
-            echo ""
-            echo "**阿里云镜像仓库:**"
-            echo "- \`registry.cn-hangzhou.aliyuncs.com/sqdockler/simple_sq_music_plus:v${{ steps.app_version.outputs.version }}\` (Multi-arch manifest)"
-            echo "- \`registry.cn-hangzhou.aliyuncs.com/sqdockler/simple_sq_music_plus:v${{ steps.app_version.outputs.version }}-amd64\`"
-            echo "- \`registry.cn-hangzhou.aliyuncs.com/sqdockler/simple_sq_music_plus:v${{ steps.app_version.outputs.version }}-arm64\`"
-            echo "- \`registry.cn-hangzhou.aliyuncs.com/sqdockler/simple_sq_music_plus:latest\` (Multi-arch manifest)"
-            echo "- \`registry.cn-hangzhou.aliyuncs.com/sqdockler/simple_sq_music_plus:latest-amd64\`"
-            echo "- \`registry.cn-hangzhou.aliyuncs.com/sqdockler/simple_sq_music_plus:latest-arm64\`"
             echo ""
             echo "**GitHub Packages:**"
             echo "- \`ghcr.io/${{ github.actor }}/simple_sq_music_plus:v${{ steps.app_version.outputs.version }}\` (Multi-arch manifest)"

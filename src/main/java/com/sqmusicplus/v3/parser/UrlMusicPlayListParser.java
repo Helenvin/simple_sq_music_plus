@@ -392,6 +392,56 @@ public class UrlMusicPlayListParser {
 
     public ParserInfo parserUrlInfo(String url) throws MalformedURLException {
         //找出url所属的平台
+        //QQ歌单
+        if (url.contains("y.qq.com")) {
+            //短链跟随302（c6.y.qq.com / t1.qq.com 等）
+            OkHttpClient okHttpClient = DownloadUtils.getOkHttpClient(false);
+            Request authRequest = new Request.Builder()
+                    .url(url)
+                    .addHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36")
+                    .get()
+                    .build();
+            try (Response authResponse = okHttpClient.newCall(authRequest).execute()){
+                String location = authResponse.header("Location");
+                if (location != null) {
+                    url = location;
+                }
+            } catch (IOException e) {
+                log.warn("QQ链接302跟随失败，按原链接解析: {}", url);
+            }
+            String disstid = null;
+            if (url.contains("/n/ryqq_v2/playlist/") || url.contains("/n/ryqq/playlist/")) {
+                //网页直接复制的歌单url：https://y.qq.com/n/ryqq/playlist/123456
+                String last = url.substring(url.lastIndexOf('/') + 1);
+                disstid = last.split("\\.")[0].split("\\?")[0];
+            } else if (url.contains("taoge.html")) {
+                //分享页：taoge.html?id=123456
+                disstid = getUrlParams(url).get("id");
+            } else {
+                //兜底：链接里任意 id=数字 参数
+                java.util.regex.Matcher matcher = java.util.regex.Pattern.compile("[?&]id=(\\d+)").matcher(url);
+                if (matcher.find()) {
+                    disstid = matcher.group(1);
+                }
+            }
+            if (StringUtils.isNotBlank(disstid) && disstid.matches("\\d+")) {
+                DissInfo dissInfo = qqvipHander.songListInfo(disstid, "1418", 1L);
+                DissInfo.DataDTO data = dissInfo != null ? dissInfo.getData() : null;
+                if (data != null && data.getDirinfo() != null && StringUtils.isNotBlank(data.getDirinfo().getTitle())) {
+                    ParserInfo parserInfo = new ParserInfo();
+                    parserInfo.setName(data.getDirinfo().getTitle());
+                    parserInfo.setPlugNmae(qqvipHander.getPlugName());
+                    parserInfo.setId(disstid);
+                    parserInfo.setUrl(url);
+                    parserInfo.setType("playlist");
+                    parserInfo.setCount(data.getDirinfo().getSongnum());
+                    parserInfo.setDesc(data.getDirinfo().getDesc());
+                    parserInfo.setCover(data.getDirinfo().getPicurl());
+                    return parserInfo;
+                }
+            }
+            throw new RuntimeException("QQ歌单解析失败，请确认分享的是公开歌单链接");
+        }
         if (url.contains("music.163.com")) {
             if (url.contains("playlist")) {
                 Map<String, String> urlParams = getUrlParams(url);

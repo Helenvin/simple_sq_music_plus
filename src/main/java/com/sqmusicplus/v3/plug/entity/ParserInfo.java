@@ -1,6 +1,8 @@
 package com.sqmusicplus.v3.plug.entity;
 
 
+import com.alibaba.fastjson2.annotation.JSONField;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 
 /**
@@ -17,8 +19,10 @@ public class ParserInfo {
      */
     private String name;
     /**
-     * 插件名称
+     * 插件名称（历史拼写 plugNmae；加注解统一序列化键为 plugName 供前端读取）
      */
+    @JsonProperty("plugName")
+    @JSONField(name = "plugName")
     private String plugNmae;
     /**
      * 唯一id

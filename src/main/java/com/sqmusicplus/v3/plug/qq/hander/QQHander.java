@@ -766,24 +766,18 @@ public class QQHander extends SearchHanderAbstract {
      * 查询歌单歌曲详情
      */
     public DissInfo songListInfo(String mid, String dirid, Long page) {
-        String sqConfig = SqConfigCache.getSqConfigValue(SetConfigEnum.PLUG_QQVIP_COOKIE);
-
-        if (StringUtils.isNotBlank(sqConfig)){
-            QQMusicCookieInfo qqMusicCookieInfo = JSONObject.parseObject(sqConfig, QQMusicCookieInfo.class);
-            if (qqMusicCookieInfo != null){
-//                String encryptUin = qqMusicCookieInfo.getEncryptUin();
-                String s = qqSearchEntity.songListInfoRequestParam(mid, dirid, page,50L);
-                String searchUrl = getConfig().getSearchUrl();
-                OkHttpUtils builder = OkHttpUtils.builder();
-                String sync = builder.url(searchUrl)
-                        .post(true, s).sync();
-                JSONObject jsonObject = JSONObject.parseObject(sync);
-                JSONObject req = jsonObject.getJSONObject("req");
-                DissInfo dissInfo = qqSearchEntity.songListInfo(req);
-                return dissInfo;
-            }
-        }
-        return null;
+        // 匿名可拉公开歌单（CgiGetDiss 无需登录态；onlysonglist=0 时返回 dirinfo + songlist）
+        String s = qqSearchEntity.songListInfoRequestParam(mid, dirid, page,50L);
+        String searchUrl = getConfig().getSearchUrl();
+        OkHttpUtils builder = OkHttpUtils.builder();
+        String sync = builder.url(searchUrl)
+                .addHeader("Content-Type", "json/application;charset=utf-8")
+                .addHeader("User-Agent","QQ%E9%9F%B3%E4%B9%90/73222 CFNetwork/1406.0.3 Darwin/22.4.0")
+                .post(true, s).sync();
+        JSONObject jsonObject = JSONObject.parseObject(sync);
+        JSONObject req = jsonObject.getJSONObject("req");
+        DissInfo dissInfo = qqSearchEntity.songListInfo(req);
+        return dissInfo;
     }
 
     //用户关注的歌手
