@@ -118,8 +118,8 @@ jobs:
           platforms: ${{ matrix.platform }}
           push: true
           tags: |
-            ghcr.io/${{ github.actor }}/simple_sq_music_plus:v${{ env.APP_VERSION }}-${{ matrix.tag_suffix }}
-            ghcr.io/${{ github.actor }}/simple_sq_music_plus:latest-${{ matrix.tag_suffix }}
+            ghcr.io/helenvin/simple_sq_music_plus:v${{ env.APP_VERSION }}-${{ matrix.tag_suffix }}
+            ghcr.io/helenvin/simple_sq_music_plus:latest-${{ matrix.tag_suffix }}
           build-args: |
             JAR_FILE=target/simple_sq_music_plus.jar
           labels: |
@@ -165,25 +165,25 @@ jobs:
         run: |
           # 版本 tag：由 v版本-arch 两个源合成
           docker buildx imagetools create \
-            -t ghcr.io/${{ github.actor }}/simple_sq_music_plus:v${{ env.APP_VERSION }} \
-            ghcr.io/${{ github.actor }}/simple_sq_music_plus:v${{ env.APP_VERSION }}-amd64 \
-            ghcr.io/${{ github.actor }}/simple_sq_music_plus:v${{ env.APP_VERSION }}-arm64
+            -t ghcr.io/helenvin/simple_sq_music_plus:v${{ env.APP_VERSION }} \
+            ghcr.io/helenvin/simple_sq_music_plus:v${{ env.APP_VERSION }}-amd64 \
+            ghcr.io/helenvin/simple_sq_music_plus:v${{ env.APP_VERSION }}-arm64
 
           # latest tag：由 latest-arch 两个源合成
           docker buildx imagetools create \
-            -t ghcr.io/${{ github.actor }}/simple_sq_music_plus:latest \
-            ghcr.io/${{ github.actor }}/simple_sq_music_plus:latest-amd64 \
-            ghcr.io/${{ github.actor }}/simple_sq_music_plus:latest-arm64
+            -t ghcr.io/helenvin/simple_sq_music_plus:latest \
+            ghcr.io/helenvin/simple_sq_music_plus:latest-amd64 \
+            ghcr.io/helenvin/simple_sq_music_plus:latest-arm64
 
       - name: Verify GHCR Manifest List
         run: |
           echo "=== v${{ env.APP_VERSION }} ==="
           docker buildx imagetools inspect \
-            ghcr.io/${{ github.actor }}/simple_sq_music_plus:v${{ env.APP_VERSION }}
+            ghcr.io/helenvin/simple_sq_music_plus:v${{ env.APP_VERSION }}
 
           echo "=== latest ==="
           docker buildx imagetools inspect \
-            ghcr.io/${{ github.actor }}/simple_sq_music_plus:latest
+            ghcr.io/helenvin/simple_sq_music_plus:latest
 
   release:
     needs: [build, create-manifest-list]
@@ -229,12 +229,12 @@ jobs:
             echo "### Docker Images Available:"
             echo ""
             echo "**GitHub Packages:**"
-            echo "- \`ghcr.io/${{ github.actor }}/simple_sq_music_plus:v${{ steps.app_version.outputs.version }}\` (Multi-arch manifest)"
-            echo "- \`ghcr.io/${{ github.actor }}/simple_sq_music_plus:v${{ steps.app_version.outputs.version }}-amd64\`"
-            echo "- \`ghcr.io/${{ github.actor }}/simple_sq_music_plus:v${{ steps.app_version.outputs.version }}-arm64\`"
-            echo "- \`ghcr.io/${{ github.actor }}/simple_sq_music_plus:latest\` (Multi-arch manifest)"
-            echo "- \`ghcr.io/${{ github.actor }}/simple_sq_music_plus:latest-amd64\`"
-            echo "- \`ghcr.io/${{ github.actor }}/simple_sq_music_plus:latest-arm64\`"
+            echo "- \`ghcr.io/helenvin/simple_sq_music_plus:v${{ steps.app_version.outputs.version }}\` (Multi-arch manifest)"
+            echo "- \`ghcr.io/helenvin/simple_sq_music_plus:v${{ steps.app_version.outputs.version }}-amd64\`"
+            echo "- \`ghcr.io/helenvin/simple_sq_music_plus:v${{ steps.app_version.outputs.version }}-arm64\`"
+            echo "- \`ghcr.io/helenvin/simple_sq_music_plus:latest\` (Multi-arch manifest)"
+            echo "- \`ghcr.io/helenvin/simple_sq_music_plus:latest-amd64\`"
+            echo "- \`ghcr.io/helenvin/simple_sq_music_plus:latest-arm64\`"
             echo ""
             echo "### Supported Architectures:"
             echo "- **AMD64**: Intel/AMD x86-64 processors"
